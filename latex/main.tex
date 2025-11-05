@@ -1,0 +1,59 @@
+\documentclass[12pt]{article}
+
+% ====== Encoding and Fonts ======
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% ====== Layout ======
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ====== Other Useful Packages ======
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+% ====== Title Information ======
+\title{Research Proposal: \\ Comparing ML Algorithms for Photos Classification}
+\author{
+    Natallie Mirelashvili 322685314\\
+    Ravit Cohen 313188799\\
+    Omer Onn 318910759\\
+    Yuval Aviv 315106948\\
+    Yehonatan Segal 209359801\\
+    Ben-Gurion University of the Negev \\
+}
+\date{November 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document presents a brief research proposal for the Research Methods course. The project aims to compare the performance of traditional machine learning algorithms and deep learning models on a sentiment analysis task using a benchmark movie reviews dataset.
+\end{abstract}
+
+\section{Introduction}
+Sentiment analysis is a common task in natural language processing, where the goal is to classify text (e.g., reviews) by polarity (positive/negative). Recent advances in deep learning have shown impressive results, but simpler models may still perform competitively under certain conditions.
+
+\section{Research Hypothesis}
+We hypothesize that traditional algorithms such as Naive Bayes and Logistic Regression, when combined with proper text preprocessing, can achieve performance comparable to that of more complex models like LSTM or BERT.
+
+\section{Resources}
+\begin{itemize}[noitemsep]
+    \item Dataset: IMDb Movie Reviews – 50,000 labeled examples from Kaggle\footnote{\texttt{https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews}}.
+    \item Libraries: Python, scikit-learn, TensorFlow (for deep learning models), Google Colab.
+\end{itemize}
+
+\section{Experimental Design}
+Each algorithm will be trained and tested on the same dataset using a standard 80/20 train-test split. Evaluation will be based on accuracy, F1 score, and runtime. Preprocessing will include tokenization, stopword removal, and TF-IDF vectorization.
+
+\section{Optional User Study}
+If time permits, we may conduct a small-scale user study where participants evaluate model predictions for interpretability and perceived correctness.
+
+\section{Conclusion}
+This project will evaluate the trade-offs between simplicity and performance in sentiment classification tasks, offering insights into when traditional methods may suffice.
+
+\end{document}
