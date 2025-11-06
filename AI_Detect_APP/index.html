@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real vs AI — Experiment</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="app">
+      <div class="container">
+        <h1>Real vs AI</h1>
+
+        <div v-if="loading" class="card">Loading…</div>
+
+        <div v-else-if="!started" class="card center">
+          <h2>Welcome 👋</h2>
+          <p>Please enter your <b>email</b> to begin.</p>
+          <input type="email" v-model="email" placeholder="Enter your email" style="margin-top:10px; width:80%; max-width:420px;" />
+          <div style="margin-top:16px;">
+            <button class="btn" :disabled="!validEmail" @click="start">Start</button>
+          </div>
+          <p style="margin-top:10px;color:#aaa;">Your email is used only to identify your responses.</p>
+        </div>
+
+        <div v-else-if="!done" class="card">
+          <div class="row">
+            <div>
+              <img :src="leftUrl" class="live" alt="left" @click="choose('left')" />
+              <div class="center" style="margin-top:10px;">
+                <button class="btn" @click="choose('left')">Choose LEFT</button>
+              </div>
+            </div>
+            <div>
+              <img :src="rightUrl" class="live" alt="right" @click="choose('right')" />
+              <div class="center" style="margin-top:10px;">
+                <button class="btn" @click="choose('right')">Choose RIGHT</button>
+              </div>
+            </div>
+          </div>
+          <div class="center" style="margin-top:14px;">
+            <span class="badge">Trial {{ idx + 1 }} / {{ pairs.length }}</span>
+            <span class="badge">Score: {{ score }}</span>
+          </div>
+        </div>
+
+        <div v-else class="card center">
+          <div class="result">Thank you for your time! 🙏</div>
+          <div class="result">Your Score: {{ score }} / {{ pairs.length }}</div>
+          <p>You may close this tab.</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

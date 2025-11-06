@@ -1,0 +1,4 @@
+{
+  "webhook_url": "https://script.google.com/macros/s/XXXXX/exec",
+  "webhook_secret": "YOUR_SECRET_STRING"
+}
