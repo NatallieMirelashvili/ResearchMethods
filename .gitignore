@@ -1,2 +1,5 @@
 # logs
 /main_logs/
+
+# virtual environment
+/.venv/
