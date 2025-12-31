@@ -1,3 +1,8 @@
 numpy
 rasterio
 matplotlib
+torch
+torchvision
+timm
+rasterio
+pyyaml

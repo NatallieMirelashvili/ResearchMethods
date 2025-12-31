@@ -1,0 +1,19 @@
+global:
+  num_classes: 24
+  in_chans: 3
+  pretrained: true
+
+models:
+  resnet50:
+    arch: resnet50
+
+  efficientnet_b0:
+    arch: efficientnet_b0
+
+  vit_tiny:
+    arch: vit_tiny_patch16_224
+    img_size: 224
+
+  vit_small:
+    arch: vit_small_patch16_224
+    img_size: 224
