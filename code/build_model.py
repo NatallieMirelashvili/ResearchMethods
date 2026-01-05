@@ -22,17 +22,13 @@ def _load_config(path: str | Path) -> Dict[str, Any]:
 
     suffix = path.suffix.lower()
     if suffix in {".yaml", ".yml"}:
-        if yaml is None:
-            raise ImportError("YAML config requested but PyYAML is not installed. Run: pip install pyyaml")
         with path.open("r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
-    elif suffix == ".json":
+    if suffix == ".json":
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
-    else:
-        raise ConfigError(f"Unsupported config extension '{suffix}'. Use .yaml/.yml or .json")
 
-
+    raise ConfigError(f"Unsupported config extension '{suffix}'. Use .yaml/.yml or .json")
 
 
 @dataclass(frozen=True)
@@ -43,28 +39,50 @@ class ModelSpec:
     in_chans: int
     pretrained: bool
     img_size: Optional[int] = None
-    timm_kwargs: Optional[Dict[str, Any]] = None
+    timm_kwargs: Dict[str, Any] = None  # will be normalized to dict in builder
 
 
 class BuildModel:
     """
     Factory for time-of-day classification models.
 
-    Usage:
-        builder = BuildModel(config_path="models_config.yaml")
-        model = builder.build("resnet50")  # or efficientnet_b0 / vit_tiny / vit_small
+    Config format:
+      global:
+        num_classes: 24
+        in_chans: 3
+        pretrained: true
+
+      models:
+        resnet50:
+          arch: resnet50
+          timm_kwargs: {}
+        efficientnet_b0:
+          arch: efficientnet_b0
+        vit_tiny:
+          arch: vit_tiny_patch16_224
+          img_size: 224
+
+    Resolution rule (NO deep merge):
+      - Start from global scalar defaults: num_classes, in_chans, pretrained
+      - If model overrides exist for those keys, use them
+      - timm_kwargs is taken from the model section only (no merging with global)
     """
 
     ALLOWED = {"resnet50", "efficientnet_b0", "vit_tiny", "vit_small"}
+    GLOBAL_KEYS = {"num_classes", "in_chans", "pretrained"}
 
     def __init__(self, config_path: str | Path) -> None:
         self.config_path = Path(config_path)
         self.cfg = _load_config(self.config_path)
 
+        if not isinstance(self.cfg, dict):
+            raise ConfigError("Config root must be a mapping/dict.")
+
         if "global" not in self.cfg or "models" not in self.cfg:
             raise ConfigError("Config must contain top-level keys: 'global' and 'models'.")
 
-        # Basic validation
+        if not isinstance(self.cfg["global"], dict):
+            raise ConfigError("'global' must be a dict.")
         if not isinstance(self.cfg["models"], dict):
             raise ConfigError("'models' must be a mapping from model_name -> config dict.")
 
@@ -72,31 +90,43 @@ class BuildModel:
         if model_name not in self.ALLOWED:
             raise ConfigError(f"model_name must be one of {sorted(self.ALLOWED)}. Got: {model_name}")
 
-        global_cfg = self.cfg.get("global", {}) or {}
-        models_cfg = self.cfg.get("models", {}) or {}
+        global_cfg: Dict[str, Any] = self.cfg.get("global", {}) or {}
+        models_cfg: Dict[str, Any] = self.cfg.get("models", {}) or {}
 
         if model_name not in models_cfg:
             raise ConfigError(f"Config missing entry for models.{model_name}")
 
-        merged = _deep_merge(global_cfg, models_cfg[model_name])
+        model_cfg = models_cfg[model_name]
+        if not isinstance(model_cfg, dict):
+            raise ConfigError(f"models.{model_name} must be a dict.")
 
-        # Required
-        arch = merged.get("arch")
-        if not arch:
-            raise ConfigError(f"models.{model_name}.arch is required (timm architecture string).")
+        # Required: arch must exist in model section
+        arch = model_cfg.get("arch")
+        if not arch or not isinstance(arch, str):
+            raise ConfigError(f"models.{model_name}.arch is required and must be a string (timm architecture).")
 
-        # Defaults with validation
-        num_classes = int(merged.get("num_classes", 24))
-        in_chans = int(merged.get("in_chans", 3))
-        pretrained = bool(merged.get("pretrained", True))
+        # Scalar defaults from global, overridden by model if provided (no merging beyond these keys)
+        def _get_scalar(key: str, default: Any) -> Any:
+            if key in model_cfg:
+                return model_cfg[key]
+            if key in global_cfg:
+                return global_cfg[key]
+            return default
 
-        img_size = merged.get("img_size", None)
+        num_classes = int(_get_scalar("num_classes", 24))
+        in_chans = int(_get_scalar("in_chans", 3))
+        pretrained = bool(_get_scalar("pretrained", True))
+
+        # img_size is model-only (typical)
+        img_size = model_cfg.get("img_size", None)
         if img_size is not None:
             img_size = int(img_size)
 
-        # Extra timm args (optional)
-        timm_kwargs = merged.get("timm_kwargs", None)
-        if timm_kwargs is not None and not isinstance(timm_kwargs, dict):
+        # timm_kwargs is model-only and must be a dict if present
+        timm_kwargs = model_cfg.get("timm_kwargs", {})
+        if timm_kwargs is None:
+            timm_kwargs = {}
+        if not isinstance(timm_kwargs, dict):
             raise ConfigError(f"models.{model_name}.timm_kwargs must be a dict if provided.")
 
         return ModelSpec(
@@ -110,28 +140,20 @@ class BuildModel:
         )
 
     def build(self, model_name: str) -> nn.Module:
-        """
-        Build and return a torch.nn.Module according to config.
-        """
         spec = self._get_model_spec(model_name)
 
-        # Core timm args
+        # timm args: model-only timm_kwargs + mandatory overrides
         kwargs: Dict[str, Any] = dict(spec.timm_kwargs or {})
         kwargs["pretrained"] = spec.pretrained
         kwargs["in_chans"] = spec.in_chans
         kwargs["num_classes"] = spec.num_classes
 
-        # ViT sometimes wants img_size explicitly if you deviate from 224.
         if spec.img_size is not None:
             kwargs["img_size"] = spec.img_size
 
-        model = timm.create_model(spec.arch, **kwargs)
-        return model
+        return timm.create_model(spec.arch, **kwargs)
 
     def describe(self, model_name: str) -> Dict[str, Any]:
-        """
-        Returns the resolved merged config for this model (useful for logging).
-        """
         spec = self._get_model_spec(model_name)
         return {
             "model_name": spec.model_name,
@@ -145,7 +167,6 @@ class BuildModel:
 
 
 def main() -> None:
-    # Example
     config_path = "models_config.yaml"
     builder = BuildModel(config_path)
 
@@ -154,8 +175,6 @@ def main() -> None:
         info = builder.describe(name)
         print(f"\nBuilt: {name}")
         print(info)
-        # sanity: print classifier head name/shape
-        # (varies by architecture)
         print("Params:", sum(p.numel() for p in model.parameters()) / 1e6, "M")
 
 
