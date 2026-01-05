@@ -1,19 +1,18 @@
 global:
-  num_classes: 24
-  in_chans: 3
+  num_classes: 6
+  in_chans: 12      
   pretrained: true
 
 models:
   resnet50:
     arch: resnet50
+    # img_size: 224   
+    timm_kwargs: {}
 
   efficientnet_b0:
     arch: efficientnet_b0
+    # img_size: 224
 
   vit_tiny:
     arch: vit_tiny_patch16_224
-    img_size: 224
-
-  vit_small:
-    arch: vit_small_patch16_224
     img_size: 224
