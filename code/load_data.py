@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 # Update this path if needed
-BASE_DIR = r'C:\Users\natal\OneDrive\תואר שני\experiment\ResearchMethods\data\BigEarthNet-S2-toy'
+BASE_DIR = r'/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2'
 
 BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12']
 
@@ -87,7 +87,7 @@ else:
     print("\nCreating DataFrame...")
     df = pd.DataFrame(all_data)
 
-    output_filename = 'bigearthnet_toy_data.pkl'
+    output_filename = 'bigearthnet_df.pkl'
     df.to_pickle(output_filename)
 
 
@@ -117,45 +117,45 @@ else:
         print("❌ DataFrame is empty. Check the path again.")
 
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
-def show_satellite_image(img_matrix, title="Satellite Image"):
-    """
-   Visualizes a satellite image using the Red, Green, and Blue bands.
-    Assumes img_matrix has shape (bands, height, width) with bands ordered as: 
-    0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
-    3 (Red), 2 (Green), and 1 (Blue) are used
-    """
+# def show_satellite_image(img_matrix, title="Satellite Image"):
+#     """
+#    Visualizes a satellite image using the Red, Green, and Blue bands.
+#     Assumes img_matrix has shape (bands, height, width) with bands ordered as: 
+#     0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
+#     3 (Red), 2 (Green), and 1 (Blue) are used
+#     """
 
-    # 0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
+#     # 0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
     
 
-    r = img_matrix[3] # Red
-    g = img_matrix[2] # Green
-    b = img_matrix[1] # Blue
+#     r = img_matrix[3] # Red
+#     g = img_matrix[2] # Green
+#     b = img_matrix[1] # Blue
     
-    rgb_image = np.stack([r, g, b], axis=-1)
+#     rgb_image = np.stack([r, g, b], axis=-1)
     
-    rgb_image = rgb_image.astype(float)
-    rgb_image = rgb_image / rgb_image.max()
+#     rgb_image = rgb_image.astype(float)
+#     rgb_image = rgb_image / rgb_image.max()
     
-    plt.imshow(rgb_image)
-    plt.title(title)
-    plt.axis('off') 
+#     plt.imshow(rgb_image)
+#     plt.title(title)
+#     plt.axis('off') 
 
-print("Generating visualization...")
-plt.figure(figsize=(10, 5))
+# print("Generating visualization...")
+# plt.figure(figsize=(10, 5))
 
-plt.subplot(1, 2, 1)
-first_img = df.iloc[0]['image_matrix']
-first_name = df.iloc[0]['patch_name']
-show_satellite_image(first_img, title=f"First Patch\n{first_name[-10:]}")
+# plt.subplot(1, 2, 1)
+# first_img = df.iloc[0]['image_matrix']
+# first_name = df.iloc[0]['patch_name']
+# show_satellite_image(first_img, title=f"First Patch\n{first_name[-10:]}")
 
 
-plt.subplot(1, 2, 2)
-last_img = df.iloc[-1]['image_matrix']
-last_name = df.iloc[-1]['patch_name']
-show_satellite_image(last_img, title=f"Last Patch\n{last_name[-10:]}")
+# plt.subplot(1, 2, 2)
+# last_img = df.iloc[-1]['image_matrix']
+# last_name = df.iloc[-1]['patch_name']
+# show_satellite_image(last_img, title=f"Last Patch\n{last_name[-10:]}")
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()

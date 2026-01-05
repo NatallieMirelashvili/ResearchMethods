@@ -71,7 +71,7 @@ class SatelliteClassifier(pl.LightningModule):
 def main():
     # 1. Load DataModule
     print("--- Setting up Data ---")
-    dm = run_preprocessing_pipeline(pkl_path='bigearthnet_toy_data.pkl', batch_size=32)
+    dm = run_preprocessing_pipeline(pkl_path='/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2/bigearthnet_df.pkl', batch_size=32)
     
     if dm is None:
         print("DataModule could not be loaded. Exiting.")
@@ -79,8 +79,9 @@ def main():
 
 
     print("💾 Saving DataModule to disk...")
-    torch.save(dm, "datamodule.pt") 
-    print("✅ DataModule saved as 'datamodule.pt'")
+    saved_path = "/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2/datamodule.pt"
+    torch.save(dm, saved_path) 
+    print("✅ DataModule saved to ", saved_path)
 
     # 2. Build Model Builder
     print("\n--- Setting up Model Builder ---")

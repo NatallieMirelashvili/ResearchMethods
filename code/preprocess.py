@@ -233,7 +233,7 @@ class SatelliteDataModule(LightningDataModule):
         return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
 # Main function to run preprocessing and return DataModule
-def run_preprocessing_pipeline(pkl_path='bigearthnet_toy_data.pkl', batch_size=16):
+def run_preprocessing_pipeline(pkl_path='/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2/bigearthnet_df.pkl', batch_size=32):
     print("Loading DataFrame...")
     try:
         # Load the preprocessed DataFrame
@@ -270,7 +270,7 @@ def run_preprocessing_pipeline(pkl_path='bigearthnet_toy_data.pkl', batch_size=1
 # --- Run Preprocessing Pipeline and Inspect (Test) ---
 if __name__ == "__main__":
     # Returns a DataModule ready for training/testing
-    dm = run_preprocessing_pipeline()
+    dm = run_preprocessing_pipeline(pkl_path='/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2/bigearthnet_df.pkl', batch_size=32)
     
     if dm:
         # Fetch one batch for inspection
