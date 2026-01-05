@@ -6,3 +6,6 @@ torchvision
 timm
 rasterio
 pyyaml
+pytorch_lightning
+pandas
+scikit-learn
