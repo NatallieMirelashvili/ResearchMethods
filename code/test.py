@@ -1,174 +1,3 @@
-# import torch
-# import pandas as pd
-# import numpy as np
-# import seaborn as sns
-# import matplotlib.pyplot as plt
-# from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, balanced_accuracy_score, confusion_matrix
-# import os
-
-# # Import necessary project modules
-# # Note: 'preprocess' is imported to ensure the DataModule class definition is available for loading
-# from train import SatelliteClassifier 
-# from build_model import BuildModel
-
-# def analyze_model(checkpoint_path, datamodule_path="datamodule.pt", builder=None):
-#     """
-#     Loads a trained model and a pre-processed DataModule, runs inference on the test set,
-#     calculates metrics, and saves results (CSV + Confusion Matrix plot).
-#     """
-#     print(f"\nProcessing model: {checkpoint_path}")
-    
-#     # 1. Device configuration
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     print(f"Using device: {device}")
-
-#     # # 2. Load the trained model from checkpoint
-#     try:
-#         # Step A: Build the empty model structure (Backbone)
-#         filename = os.path.basename(checkpoint_path) # "resnet50-best.ckpt"
-#         arch_name = filename.split('-')[0]
-#         backbone = builder.build(arch_name)
-        
-#         # Step B: Load the weights from checkpoint into the wrapper class
-#         # We MUST pass 'model=backbone' because __init__ requires it
-#         model = SatelliteClassifier.load_from_checkpoint(checkpoint_path, model=backbone)
-        
-#         model.to(device)
-#         model.eval() 
-#     except Exception as e:
-#         print(f"Error loading model from {checkpoint_path}: {e}")
-#         return
-
-#     # 3. Load the pre-processed DataModule
-#     # This avoids re-running the heavy preprocessing pipeline.
-#     print(f"Loading data from {datamodule_path}...")
-    
-#     if not os.path.exists(datamodule_path):
-#         print(f"Error: {datamodule_path} not found. Please run train.py first to generate it.")
-#         return
-
-#     try:
-#         dm = torch.load(datamodule_path, weights_only=False)
-#     except Exception as e:
-#         print(f"Error loading DataModule: {e}")
-#         return
-
-#     try:
-#         test_loader = dm.test_dataloader()
-#         print("✅ DataModule is already set up. Loaded test_dataloader successfully.")
-#     except Exception:
-#         print("⚠️ DataModule needs setup. Running dm.setup()...")
-#         dm.setup()
-#         test_loader = dm.test_dataloader()
-
-
-#     # 4. Run Inference (Predictions)
-#     print("Running inference on Test Set...")
-#     all_preds = []
-#     all_labels = []
-
-#     with torch.no_grad(): # Disable gradient calculation for inference
-#         for batch in test_loader:
-#             x, y = batch
-#             x = x.to(device)
-            
-#             logits = model(x)
-#             preds = torch.argmax(logits, dim=1)
-            
-#             all_preds.extend(preds.cpu().numpy())
-#             all_labels.extend(y.cpu().numpy())
-
-#     # Convert lists to numpy arrays
-#     y_true = np.array(all_labels)
-#     y_pred = np.array(all_preds)
-
-#     # 5. Calculate Evaluation Metrics
-#     print("Calculating metrics...")
-    
-#     # Accuracy
-#     acc = accuracy_score(y_true, y_pred)
-    
-#     # Precision, Recall, F1 (Macro Average)
-#     precision = precision_score(y_true, y_pred, average='macro', zero_division=0)
-#     recall = recall_score(y_true, y_pred, average='macro', zero_division=0)
-#     f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
-    
-#     # Balanced Accuracy (Important for imbalanced datasets)
-#     balanced_acc = balanced_accuracy_score(y_true, y_pred)
-
-#     # Extract model name for file naming
-#     model_name = os.path.basename(checkpoint_path).replace('.ckpt', '')
-
-#     # Print results to console
-#     print("-" * 40)
-#     print(f"📊 Evaluation Results: {model_name}")
-#     print("-" * 40)
-#     print(f"Accuracy:          {acc:.4f}")
-#     print(f"Balanced Accuracy: {balanced_acc:.4f}")
-#     print(f"Precision (Macro): {precision:.4f}")
-#     print(f"Recall (Macro):    {recall:.4f}")
-#     print(f"F1 Score (Macro):  {f1:.4f}")
-#     print("-" * 40)
-
-#     # 6. Save Metrics to CSV
-#     metrics_dict = {
-#         "Metric": ["Accuracy", "Balanced Accuracy", "Precision (Macro)", "Recall (Macro)", "F1 Score (Macro)"],
-#         "Value": [acc, balanced_acc, precision, recall, f1]
-#     }
-#     df_metrics = pd.DataFrame(metrics_dict)
-    
-#     csv_filename = f"metrics_{model_name}.csv"
-#     df_metrics.to_csv(csv_filename, index=False)
-#     print(f"✅ Metrics saved to '{csv_filename}'")
-
-#    # 7. Generate and Save Confusion Matrix
-#     print("Generating Confusion Matrix...")
-#     cm = confusion_matrix(y_true, y_pred, labels=range(24))
-    
-#     plt.figure(figsize=(16, 14))
-#     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-#                 xticklabels=range(6), 
-#                 yticklabels=range(6),
-#                 cbar=True)
-    
-#     plt.title(f'Confusion Matrix - {model_name}\n(Numbers = Count of Images)')
-#     plt.xlabel('Predicted Hour')
-#     plt.ylabel('True Hour')
-#     plt.tight_layout()
-    
-#     plot_filename = f"confusion_matrix_{model_name}.png"
-#     plt.savefig(plot_filename)
-#     plt.close() 
-#     print(f"✅ Confusion Matrix saved to '{plot_filename}'")
-
-# if __name__ == "__main__":
-#     # Define paths
-#     checkpoints = [
-#         "checkpoints/vit_tiny-best.ckpt", 
-#         "checkpoints/resnet50-best.ckpt", 
-#         "checkpoints/efficientnet_b0-best.ckpt"
-#     ]
-#     DATAMODULE_FILE = "datamodule.pt"
-#     CONFIG_PATH = "ResearchMethods/configurations/models_config.yaml"
-
-#     # Initialize the Model Builder once
-#     if not os.path.exists(CONFIG_PATH):
-#         print(f"Error: Config file not found at {CONFIG_PATH}")
-#     else:
-#         print("Initializing Model Builder...")
-#         builder = BuildModel(CONFIG_PATH)
-
-#         print("Starting batch analysis...")
-        
-#         for ckpt in checkpoints:
-#             if os.path.exists(ckpt):
-#                 # Pass the builder to the function
-#                 analyze_model(ckpt, DATAMODULE_FILE, builder)
-#             else:
-#                 print(f"⚠️ Warning: Checkpoint file not found: {ckpt}")
-                
-#         print("\nAnalysis complete.")
-
 import torch
 import pandas as pd
 import numpy as np
@@ -180,6 +9,14 @@ import os
 # Import necessary project modules
 from train import SatelliteClassifier 
 from build_model import BuildModel
+
+checkpoints = [
+    "checkpoints/vit_tiny-best.ckpt", 
+    "checkpoints/resnet50-best.ckpt", 
+    "checkpoints/efficientnet_b0-best.ckpt"
+]
+DATAMODULE_FILE = "datamodule.pt"
+CONFIG_PATH = "configurations/models_config.yaml"
 
 def analyze_model(checkpoint_path, datamodule_path="datamodule.pt", builder=None):
     """
@@ -310,14 +147,6 @@ def analyze_model(checkpoint_path, datamodule_path="datamodule.pt", builder=None
     print(f"✅ Confusion Matrix saved to '{plot_filename}'")
 
 if __name__ == "__main__":
-    checkpoints = [
-        "checkpoints/vit_tiny-best.ckpt", 
-        "checkpoints/resnet50-best.ckpt", 
-        "checkpoints/efficientnet_b0-best.ckpt"
-    ]
-    DATAMODULE_FILE = "datamodule.pt"
-    CONFIG_PATH = "ResearchMethods/configurations/models_config.yaml"
-
     if not os.path.exists(CONFIG_PATH):
         print(f"Error: Config file not found at {CONFIG_PATH}")
     else:

@@ -8,6 +8,8 @@ from pathlib import Path
 from preprocess import run_preprocessing_pipeline  
 from build_model import BuildModel             
 
+pkl_relative_path = 'bigearthnet_df.pkl'
+config_path = "configurations/models_config.yaml"
 
 class SatelliteClassifier(pl.LightningModule):
     def __init__(self, model, lr=1e-4):
@@ -71,7 +73,7 @@ class SatelliteClassifier(pl.LightningModule):
 def main():
     # 1. Load DataModule
     print("--- Setting up Data ---")
-    dm = run_preprocessing_pipeline(pkl_path='/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2/bigearthnet_df.pkl', batch_size=32)
+    dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
     
     if dm is None:
         print("DataModule could not be loaded. Exiting.")
@@ -79,13 +81,13 @@ def main():
 
 
     print("💾 Saving DataModule to disk...")
-    saved_path = "/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2/datamodule.pt"
+    saved_path = "datamodule.pt"
     torch.save(dm, saved_path) 
     print("✅ DataModule saved to ", saved_path)
 
     # 2. Build Model Builder
     print("\n--- Setting up Model Builder ---")
-    config_path = "ResearchMethods/configurations/models_config.yaml"
+
     if not Path(config_path).exists():
         print(f"Error: {config_path} not found. Please create it.")
         return

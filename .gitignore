@@ -3,3 +3,5 @@
 
 # virtual environment
 /.venv/
+code/__pycache__/preprocess.cpython-313.pyc
+code/__pycache__/train.cpython-313.pyc

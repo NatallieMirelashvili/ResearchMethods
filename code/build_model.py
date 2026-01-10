@@ -166,17 +166,17 @@ class BuildModel:
         }
 
 
-def main() -> None:
-    config_path = "models_config.yaml"
-    builder = BuildModel(config_path)
+# def main() -> None:
+#     config_path = "models_config.yaml"
+#     builder = BuildModel(config_path)
 
-    for name in ["resnet50", "efficientnet_b0", "vit_tiny"]:
-        model = builder.build(name)
-        info = builder.describe(name)
-        print(f"\nBuilt: {name}")
-        print(info)
-        print("Params:", sum(p.numel() for p in model.parameters()) / 1e6, "M")
+#     for name in ["resnet50", "efficientnet_b0", "vit_tiny"]:
+#         model = builder.build(name)
+#         info = builder.describe(name)
+#         print(f"\nBuilt: {name}")
+#         print(info)
+#         print("Params:", sum(p.numel() for p in model.parameters()) / 1e6, "M")
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
