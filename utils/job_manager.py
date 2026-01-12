@@ -120,6 +120,55 @@ def get_top_n_nodes_with_max_cpus_and_mem(
     nodes_sorted = sorted(nodes, key=lambda x: x["cpus"], reverse=True)
     return nodes_sorted[:n]
 
+def get_top_n_gpu_nodes(
+    n: int = 10,
+    partition: str = "main",
+    reserve_cpus_per_node: int = 2,
+    mem_fraction: float = 0.9,
+) -> List[Dict[str, any]]:
+    """
+    returns top N GPU nodes sorted by idle CPUs.
+    """
+    cmd = (
+        f'sinfo -r --Node --partition={partition} '
+        '--exact --Format="NodeHost,CPUsState,FreeMem"'
+    )
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise Exception(f"Error running sinfo: {result.stderr}")
+
+    nodes: List[Dict[str, any]] = []
+    seen_nodes: Set[str] = set()
+
+    pattern = re.compile(
+        r'(?P<hostname>\S+)\s+'
+        r'(?P<cpus_alloc>\d+)/(?P<cpus_idle>\d+)/(?P<cpus_other>\d+)/(?P<cpus_total>\d+)\s+'
+        r'(?P<free_mem>\d+)'
+    )
+
+    for line in result.stdout.splitlines():
+        m = pattern.match(line)
+        if not m: continue
+
+        info = m.groupdict()
+        hostname = info["hostname"]
+        if hostname in seen_nodes or hostname == "HOSTNAMES": continue
+        seen_nodes.add(hostname)
+
+        cpus_idle = int(info["cpus_idle"])
+        free_mem_mb = int(info["free_mem"])
+
+        usable_cpus = max(cpus_idle - reserve_cpus_per_node, 0)
+        mem_gb = int((free_mem_mb / 1024.0) * mem_fraction)
+
+        if usable_cpus > 0 and mem_gb > 0:
+            nodes.append({
+                "hostname": hostname,
+                "cpus": usable_cpus,
+                "mem": mem_gb,
+            })
+
+    return sorted(nodes, key=lambda x: x["cpus"], reverse=True)[:n]
 
 # --------------------------------------------------------------------
 # Job Manager
@@ -133,9 +182,10 @@ class JobManager:
         parent_path: str = os.getcwd(),
         env_path: str = sys.executable,
         log_data_path: str = os.path.join(os.getcwd(), "main_logs"),
-        partition: str = "cpu",
-        max_cpus_per_job: int = 64,
-        total_cpu_limit: int = 2600 - 128,
+        partition: str = "main",
+        gpu_type: str = "rtx_3090:1",
+        max_cpus_per_job: int = 4,
+        total_cpu_limit: int = 100,
     ):
         """
         main_path: path to the Python script to run.
@@ -151,21 +201,28 @@ class JobManager:
         self.partition = partition
         self.max_cpus_per_job = max_cpus_per_job
 
-        # CPU-only nodes: in cpu partition but not in gpu partition
-        self.free_resources = get_top_n_nodes_with_max_cpus_and_mem(
-            n=num_jobs,
-            cpu_partition=self.partition,
-            gpu_partition="gpu",
-        )
-
+        # # CPU-only nodes: in cpu partition but not in gpu partition
+        # self.free_resources = get_top_n_nodes_with_max_cpus_and_mem(
+        #     n=num_jobs,
+        #     cpu_partition=self.partition,
+        #     gpu_partition="gpu",
+        # )
+        self.free_resources = get_top_n_gpu_nodes(
+                    n=num_jobs,
+                    partition=self.partition
+                )
         self.num_jobs = num_jobs
         self.job_scripts: List[str] = []
         self.job_ids: List[str] = []
-
-        self.limit_cpu = total_cpu_limit
-        self.current_limit_cpu = total_cpu_limit
-
         os.makedirs(self.log_data_path, exist_ok=True)
+        # self.num_jobs = num_jobs
+        # self.job_scripts: List[str] = []
+        # self.job_ids: List[str] = []
+
+        # self.limit_cpu = total_cpu_limit
+        # self.current_limit_cpu = total_cpu_limit
+
+        # os.makedirs(self.log_data_path, exist_ok=True)
 
     def create_job_script(self, job_index: int) -> str:
         """
@@ -188,17 +245,21 @@ class JobManager:
 
         job_script_name = os.path.join(self.log_data_path, f"job_script_{job_index}.sh")
 
-        with open(job_script_name, "w") as script_file:
-            script_file.write("#!/bin/bash\n")
-            script_file.write(f"#SBATCH --job-name=multi_job_{job_index}\n")
-            script_file.write(f"#SBATCH --cpus-per-task={cpus_job}\n")
-            script_file.write(f"#SBATCH --mem={mem}G\n")
-            script_file.write(
+        with open(job_script_name, "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write(f"#SBATCH --job-name=gpu_job_{job_index}\n")
+            f.write(f"#SBATCH --partition={self.partition}\n")
+            f.write(f"#SBATCH --qos={self.qos}\n")
+            f.write(f"#SBATCH --gres=gpu:{self.gpu_type}\n") # specify GPU type and count
+            f.write(f"#SBATCH --cpus-per-task={cpus_job}\n")
+            f.write(f"#SBATCH --mem={mem}G\n")
+            f.write(f"#SBATCH --time=06:00:00\n")
+            f.write(
                 f"#SBATCH --output={os.path.join(self.log_data_path, f'%j_job_output_{job_index}.txt')}\n"
             )
-            script_file.write(f"#SBATCH --partition={self.partition}\n")
-            script_file.write(f"export PYTHONPATH={self.parent_path}:$PYTHONPATH\n")
-            script_file.write(f"{self.env_path} {self.main_path}\n")
+            f.write(f"#SBATCH --partition={self.partition}\n")
+            f.write(f"export PYTHONPATH={self.parent_path}:$PYTHONPATH\n")
+            f.write(f"{self.env_path} {self.main_path}\n")
 
         return job_script_name
 
@@ -298,8 +359,8 @@ if __name__ == "__main__":
         parent_path=parent_path,
         env_path=env_path,
         log_data_path=log_data_path,
-        partition="cpu",          # use the cpu partition
-        max_cpus_per_job=64,      # cap CPUs per job
-        total_cpu_limit=2600 - 128,
+        partition="main",          # use the main partition
+        max_cpus_per_job=4,      # cap CPUs per job
+        total_cpu_limit=100,
     )
     manager.create_jobs()
