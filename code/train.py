@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,6 +10,7 @@ from preprocess import run_preprocessing_pipeline
 from build_model import BuildModel             
 
 pkl_relative_path = 'bigearthnet_df.pkl'
+DATAMODULE_PATH = "datamodule.pt"
 config_path = "configurations/models_config.yaml"
 
 class SatelliteClassifier(pl.LightningModule):
@@ -73,17 +75,19 @@ class SatelliteClassifier(pl.LightningModule):
 def main():
     # 1. Load DataModule
     print("--- Setting up Data ---")
-    dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
-    
-    if dm is None:
-        print("DataModule could not be loaded. Exiting.")
-        return
+    if os.path.exists(DATAMODULE_PATH):
+        print(f"♻️ Loading existing DataModule from {DATAMODULE_PATH}...")
+        dm = torch.load(DATAMODULE_PATH, weights_only=False)
+    else:
+        print("--- Setting up Data (Full Pipeline) ---")
+        dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+        if dm is not None:
+            torch.save(dm, DATAMODULE_PATH)
+            print("✅ DataModule saved to disk.")
+        else:
+            print("❌ DataModule creation failed. Exiting.")
+            return
 
-
-    print("💾 Saving DataModule to disk...")
-    saved_path = "datamodule.pt"
-    torch.save(dm, saved_path) 
-    print("✅ DataModule saved to ", saved_path)
 
     # 2. Build Model Builder
     print("\n--- Setting up Model Builder ---")
@@ -112,13 +116,16 @@ def main():
         # 2. Wrap in Lightning Module
         system = SatelliteClassifier(model=raw_model, lr=3e-4)
 
+        model_ckpt_dir = f'checkpoints/{model_name}/'
+
         # 3. Setup Checkpointing
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode='max',
-            dirpath='checkpoints/',
+            dirpath=model_ckpt_dir,
             filename=f'{model_name}-best',
             save_top_k=1,
+            save_last=True,
             verbose=True
         )
 
@@ -132,7 +139,13 @@ def main():
         )
 
         # 5. Training
-        trainer.fit(system, datamodule=dm)
+        last_ckpt = Path(model_ckpt_dir) / "last.ckpt"
+        resume_path = str(last_ckpt) if last_ckpt.exists() else None
+        
+        if resume_path:
+            print(f"🔄 Resuming {model_name} from last checkpoint...")
+
+        trainer.fit(system, datamodule=dm, ckpt_path=resume_path)
         
 if __name__ == "__main__":
     main()

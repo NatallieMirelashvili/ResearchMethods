@@ -137,21 +137,14 @@ def run_preprocessing_pipeline(pkl_path='bigearthnet_df.pkl', batch_size=32):
     
     return data_module
 
-# # --- Run Preprocessing Pipeline and Inspect (Test) ---
-# if __name__ == "__main__":
-#     # Returns a DataModule ready for training/testing
-#     dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+# --- Run Preprocessing Pipeline and Inspect (Test) ---
+if __name__ == "__main__":
+    print("--- Running Preprocessing Pipeline ---")
+    # Returns a DataModule ready for training/testing
+    dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
     
-#     if dm:
-#         # Fetch one batch for inspection
-#         train_loader = dm.train_dataloader()
-#         images, labels = next(iter(train_loader))
-        
-#         print("\n--- Batch Inspection ---")
-#         print(f"Images Shape: {images.shape}") 
-#         print(f"Labels Shape: {labels.shape}") 
-#         print(f"Labels Example: {labels}") # Should be values between 0 and 5
-        
-#         # Check pixel value range
-#         print(f"Max pixel value: {images.max():.4f} (Should be <= 1.0)")
-#         print(f"Min pixel value: {images.min():.4f} (Should be >= 0.0)")
+    if dm is not None:
+        torch.save(dm, "datamodule.pt")
+        print("✅ DataModule saved successfully as datamodule.pt")
+    else:
+        print("❌ DataModule creation failed.")

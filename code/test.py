@@ -11,9 +11,9 @@ from train import SatelliteClassifier
 from build_model import BuildModel
 
 checkpoints = [
-    "checkpoints/vit_tiny-best.ckpt", 
-    "checkpoints/resnet50-best.ckpt", 
-    "checkpoints/efficientnet_b0-best.ckpt"
+    "checkpoints/vit_tiny/vit_tiny-best.ckpt",
+    "checkpoints/resnet50/resnet50-best.ckpt",
+    "checkpoints/efficientnet_b0/efficientnet_b0-best.ckpt"
 ]
 DATAMODULE_FILE = "datamodule.pt"
 CONFIG_PATH = "configurations/models_config.yaml"
