@@ -182,10 +182,10 @@ class JobManager:
         parent_path: str = os.getcwd(),
         env_path: str = sys.executable,
         log_data_path: str = os.path.join(os.getcwd(), "main_logs"),
-        partition: str = "main",
-        gpu_type: str = "rtx_3090:1",
-        max_cpus_per_job: int = 4,
-        total_cpu_limit: int = 100,
+        partition: str = "main",    
+        qos: str = "normal",         
+        gpu_type: str = "rtx_3090:1", 
+        max_cpus_per_job: int = 4,   
     ):
         """
         main_path: path to the Python script to run.
@@ -199,6 +199,8 @@ class JobManager:
         self.env_path = env_path
         self.log_data_path = log_data_path
         self.partition = partition
+        self.qos = qos
+        self.gpu_type = gpu_type
         self.max_cpus_per_job = max_cpus_per_job
 
         # # CPU-only nodes: in cpu partition but not in gpu partition
