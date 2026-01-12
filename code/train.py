@@ -9,8 +9,8 @@ from pathlib import Path
 from preprocess import run_preprocessing_pipeline  
 from build_model import BuildModel             
 
-pkl_relative_path = 'bigearthnet_df.pkl'
-DATAMODULE_PATH = "datamodule.pt"
+pkl_relative_path = 'GPU_RUN/bigearthnet_df.pkl'
+DATAMODULE_PATH = "GPU_RUN/datamodule.pt"
 config_path = "configurations/models_config.yaml"
 
 class SatelliteClassifier(pl.LightningModule):
@@ -116,7 +116,7 @@ def main():
         # 2. Wrap in Lightning Module
         system = SatelliteClassifier(model=raw_model, lr=3e-4)
 
-        model_ckpt_dir = f'checkpoints/{model_name}/'
+        model_ckpt_dir = f'GPU_RUN/checkpoints/{model_name}/'
 
         # 3. Setup Checkpointing
         checkpoint_callback = ModelCheckpoint(

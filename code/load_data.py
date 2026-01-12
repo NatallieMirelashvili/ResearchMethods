@@ -87,7 +87,7 @@ else:
     print("\nCreating DataFrame...")
     df = pd.DataFrame(all_data)
 
-    output_filename = 'bigearthnet_df.pkl'
+    output_filename = 'GPU_RUN/bigearthnet_df.pkl'
     df.to_pickle(output_filename)
 
 

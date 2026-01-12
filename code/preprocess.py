@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import torchvision.transforms as T
 
-pkl_relative_path = 'bigearthnet_df.pkl'
+pkl_relative_path = 'GPU_RUN/bigearthnet_df.pkl'
 
 # --- Dataset Class ---
 class BigEarthNetDataset(Dataset):
@@ -103,7 +103,7 @@ class SatelliteDataModule(LightningDataModule):
         return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
 # Main function to run preprocessing and return DataModule
-def run_preprocessing_pipeline(pkl_path='bigearthnet_df.pkl', batch_size=32):
+def run_preprocessing_pipeline(pkl_path='GPU_RUN/bigearthnet_df.pkl', batch_size=32):
     print("Loading DataFrame...")
     try:
         # Load the preprocessed DataFrame
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
     
     if dm is not None:
-        torch.save(dm, "datamodule.pt")
-        print("✅ DataModule saved successfully as datamodule.pt")
+        torch.save(dm, "GPU_RUN/datamodule.pt")
+        print("✅ DataModule saved successfully as GPU_RUN/datamodule.pt")
     else:
         print("❌ DataModule creation failed.")
