@@ -1,6 +1,8 @@
 from utils.job_manager import *
 
-USER_NAME = "avivyuv"
+# USER_NAME = "avivyuv"
+USER_NAME = "segaldol"
+
 
 # path to the main script to be executed
 main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/load_data.py"
