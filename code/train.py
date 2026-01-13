@@ -9,7 +9,7 @@ from pathlib import Path
 from preprocess import run_preprocessing_pipeline  
 from build_model import BuildModel             
 
-# pkl_relative_path = 'bigearthnet_df.pkl'
+pkl_relative_path = 'bigearthnet_df.pkl'
 PKL_CHUNKS_DIR = "out_chunks"
 DATAMODULE_PATH = "datamodule.pt"
 config_path = "configurations/models_config.yaml"
@@ -91,9 +91,10 @@ def main():
         dm = torch.load(DATAMODULE_PATH, weights_only=False)
     else:
         print("--- Setting up Data (Full Pipeline) ---")
-        # dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
-        chunk_paths = list_chunk_pkls(PKL_CHUNKS_DIR)
-        dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
+        dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+        # chunk
+        # chunk_paths = list_chunk_pkls(PKL_CHUNKS_DIR)
+        # dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
         if dm is not None:
             torch.save(dm, DATAMODULE_PATH)
             print("✅ DataModule saved to disk.")

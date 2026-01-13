@@ -75,7 +75,7 @@ def get_next_chunk_id(out_dir: str) -> int:
                 pass
     return (max(ids) + 1) if ids else 0
 
-def main():
+def main_patches():
     # resume mechanism logic
     chunk_id = get_next_chunk_id(OUT_DIR)
     already_saved = chunk_id * BATCH_SIZE
@@ -131,103 +131,104 @@ def main():
     # That is the equivalent content to your old df, just split across multiple files.
 
 
+def main_full_dataframe():
+    all_data = []
+
+    if not os.path.exists(BASE_DIR):
+        print(f"Error: Directory not found at {BASE_DIR}")
+    else:
+        print(f"Scanning Base Directory: {BASE_DIR}")
+        
+        # 1. Get all Tile folders
+        tile_folders = [f for f in os.scandir(BASE_DIR) if f.is_dir()]
+        print(f"Found {len(tile_folders)} Tiles. Scanning for Patches inside...")
+
+        # 2. Loop over Tiles
+        for tile in tqdm(tile_folders, desc="Processing Tiles"):
+            
+            # 3. Get all Patches inside the current Tile
+            patch_folders = [p for p in os.scandir(tile.path) if p.is_dir()]
+            
+            # 4. Loop over Patches
+            for patch in patch_folders:
+                patch_data = read_patch(patch.path, patch.name)
+                if patch_data:
+                    all_data.append(patch_data)
+
+        # --- Save and Inspect ---
+        print("\nCreating DataFrame...")
+        df = pd.DataFrame(all_data)
+
+        output_filename = 'bigearthnet_df.pkl'
+        df.to_pickle(output_filename)
+
+        # Debug prints - disable before running large scale on cluster!
+        print(f"Saved to {output_filename}")
+
+        # --- Data Inspection ---
+        print("\n" + "="*30)
+        print("DataFrame Inspection")
+        print("="*30)
+
+        print(f"Total patches loaded: {len(df)}")
+
+        if not df.empty:
+            print("\nFirst 5 rows:")
+            print(df[['patch_name', 'time_str']].head())
+
+            first_matrix_shape = df.iloc[0]['image_matrix'].shape
+            print(f"\nShape of the first image matrix: {first_matrix_shape}")
+            
+            if first_matrix_shape == (12, 120, 120):
+                print("✅ Success! Image shape is correct.")
+            else:
+                print(f"⚠️ Warning! Expected (12, 120, 120) but got {first_matrix_shape}")
+        else:
+            print("❌ DataFrame is empty. Check the path again.")
+
+
+    # import matplotlib.pyplot as plt
+
+    # def show_satellite_image(img_matrix, title="Satellite Image"):
+    #     """
+    #    Visualizes a satellite image using the Red, Green, and Blue bands.
+    #     Assumes img_matrix has shape (bands, height, width) with bands ordered as: 
+    #     0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
+    #     3 (Red), 2 (Green), and 1 (Blue) are used
+    #     """
+
+    #     # 0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
+        
+
+    #     r = img_matrix[3] # Red
+    #     g = img_matrix[2] # Green
+    #     b = img_matrix[1] # Blue
+        
+    #     rgb_image = np.stack([r, g, b], axis=-1)
+        
+    #     rgb_image = rgb_image.astype(float)
+    #     rgb_image = rgb_image / rgb_image.max()
+        
+    #     plt.imshow(rgb_image)
+    #     plt.title(title)
+    #     plt.axis('off') 
+
+    # print("Generating visualization...")
+    # plt.figure(figsize=(10, 5))
+
+    # plt.subplot(1, 2, 1)
+    # first_img = df.iloc[0]['image_matrix']
+    # first_name = df.iloc[0]['patch_name']
+    # show_satellite_image(first_img, title=f"First Patch\n{first_name[-10:]}")
+
+
+    # plt.subplot(1, 2, 2)
+    # last_img = df.iloc[-1]['image_matrix']
+    # last_name = df.iloc[-1]['patch_name']
+    # show_satellite_image(last_img, title=f"Last Patch\n{last_name[-10:]}")
+
+    # plt.tight_layout()
+    # plt.show()
+
 if __name__ == "__main__":
-    main()
-
-# all_data = []
-
-# if not os.path.exists(BASE_DIR):
-#     print(f"Error: Directory not found at {BASE_DIR}")
-# else:
-#     print(f"Scanning Base Directory: {BASE_DIR}")
-    
-#     # 1. Get all Tile folders
-#     tile_folders = [f for f in os.scandir(BASE_DIR) if f.is_dir()]
-#     print(f"Found {len(tile_folders)} Tiles. Scanning for Patches inside...")
-
-#     # 2. Loop over Tiles
-#     for tile in tqdm(tile_folders, desc="Processing Tiles"):
-        
-#         # 3. Get all Patches inside the current Tile
-#         patch_folders = [p for p in os.scandir(tile.path) if p.is_dir()]
-        
-#         # 4. Loop over Patches
-#         for patch in patch_folders:
-#             patch_data = read_patch(patch.path, patch.name)
-#             if patch_data:
-#                 all_data.append(patch_data)
-
-#     # --- Save and Inspect ---
-#     print("\nCreating DataFrame...")
-#     df = pd.DataFrame(all_data)
-
-#     output_filename = 'bigearthnet_df.pkl'
-#     df.to_pickle(output_filename)
-
-#     # Debug prints - disable before running large scale on cluster!
-#     print(f"Saved to {output_filename}")
-
-#     # --- Data Inspection ---
-#     print("\n" + "="*30)
-#     print("DataFrame Inspection")
-#     print("="*30)
-
-#     print(f"Total patches loaded: {len(df)}")
-
-#     if not df.empty:
-#         print("\nFirst 5 rows:")
-#         print(df[['patch_name', 'time_str']].head())
-
-#         first_matrix_shape = df.iloc[0]['image_matrix'].shape
-#         print(f"\nShape of the first image matrix: {first_matrix_shape}")
-        
-#         if first_matrix_shape == (12, 120, 120):
-#             print("✅ Success! Image shape is correct.")
-#         else:
-#             print(f"⚠️ Warning! Expected (12, 120, 120) but got {first_matrix_shape}")
-#     else:
-#         print("❌ DataFrame is empty. Check the path again.")
-
-
-# # import matplotlib.pyplot as plt
-
-# # def show_satellite_image(img_matrix, title="Satellite Image"):
-# #     """
-# #    Visualizes a satellite image using the Red, Green, and Blue bands.
-# #     Assumes img_matrix has shape (bands, height, width) with bands ordered as: 
-# #     0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
-# #     3 (Red), 2 (Green), and 1 (Blue) are used
-# #     """
-
-# #     # 0:B01, 1:B02(Blue), 2:B03(Green), 3:B04(Red), ...
-    
-
-# #     r = img_matrix[3] # Red
-# #     g = img_matrix[2] # Green
-# #     b = img_matrix[1] # Blue
-    
-# #     rgb_image = np.stack([r, g, b], axis=-1)
-    
-# #     rgb_image = rgb_image.astype(float)
-# #     rgb_image = rgb_image / rgb_image.max()
-    
-# #     plt.imshow(rgb_image)
-# #     plt.title(title)
-# #     plt.axis('off') 
-
-# # print("Generating visualization...")
-# # plt.figure(figsize=(10, 5))
-
-# # plt.subplot(1, 2, 1)
-# # first_img = df.iloc[0]['image_matrix']
-# # first_name = df.iloc[0]['patch_name']
-# # show_satellite_image(first_img, title=f"First Patch\n{first_name[-10:]}")
-
-
-# # plt.subplot(1, 2, 2)
-# # last_img = df.iloc[-1]['image_matrix']
-# # last_name = df.iloc[-1]['patch_name']
-# # show_satellite_image(last_img, title=f"Last Patch\n{last_name[-10:]}")
-
-# # plt.tight_layout()
-# # plt.show()
+    main_full_dataframe()

@@ -1,0 +1,18 @@
+Mon 12 Jan 2026 20:27:42 IST
+
+SLURM_JOBID:		 11988393
+SLURM_JOB_NODELIST:	 ise-pheno-01 
+
+
+IP ADDRESS: 132.72.180.61 
+
+
+Working directory: /home/avivyuv/bigearthnet_v2/ResearchMethods
+Scanning Base Directory: /dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2
+Found 115 Tiles. Scanning for Patches inside...
+Processing Tiles:   0%|          | 0/115 [00:00<?, ?it/s]Processing Tiles:   1%|          | 1/115 [05:05<9:39:53, 305.21s/it]Processing Tiles:   2%|▏         | 2/115 [15:22<15:20:19, 488.67s/it]Processing Tiles:   3%|▎         | 3/115 [27:49<18:52:09, 606.51s/it]Processing Tiles:   3%|▎         | 4/115 [40:31<20:35:50, 668.02s/it]Processing Tiles:   4%|▍         | 5/115 [54:23<22:13:27, 727.35s/it]Processing Tiles:   5%|▌         | 6/115 [54:58<14:53:34, 491.87s/it]Processing Tiles:   6%|▌         | 7/115 [1:04:37<15:36:44, 520.41s/it]Processing Tiles:   7%|▋         | 8/115 [1:07:13<12:00:44, 404.16s/it]Processing Tiles:   8%|▊         | 9/115 [1:15:06<12:32:08, 425.74s/it]Processing Tiles:   9%|▊         | 10/115 [1:29:07<16:09:38, 554.08s/it]Processing Tiles:  10%|▉         | 11/115 [1:36:30<15:01:19, 519.99s/it]Processing Tiles:  10%|█         | 12/115 [1:51:13<18:02:18, 630.47s/it]Processing Tiles:  11%|█▏        | 13/115 [1:57:59<15:55:55, 562.31s/it]🚀 Starting pipeline execution from: /home/avivyuv/bigearthnet_v2/ResearchMethods/code
+--------------------------------------------------
+▶️  Running script: load_data.py
+--------------------------------------------------
+❌ Error running load_data.py. Pipeline stopped.
+[2026-01-12T22:44:40.381] error: Detected 1 oom_kill event in StepId=11988393.batch. Some of the step tasks have been OOM Killed.
