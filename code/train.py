@@ -7,11 +7,13 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pathlib import Path
 
 from preprocess import run_preprocessing_pipeline, SatelliteDataModule, BigEarthNetDataset
-from build_model import BuildModel             
+from build_model import BuildModel    
+
+USER_NAME = "segaldol"
 
 pkl_relative_path = 'bigearthnet_df.pkl'
 PKL_CHUNKS_DIR = "out_chunks"
-DATAMODULE_PATH = "/home/avivyuv/bigearthnet_v2/ResearchMethods/datamodule.pt"
+DATAMODULE_PATH = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/datamodule.pt"
 config_path = "configurations/models_config.yaml"
 
 def list_chunk_pkls(chunks_dir: str):
