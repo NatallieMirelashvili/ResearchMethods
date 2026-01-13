@@ -6,12 +6,21 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pathlib import Path
 
-from preprocess import run_preprocessing_pipeline  
+from preprocess import run_preprocessing_pipeline, SatelliteDataModule, BigEarthNetDataset
 from build_model import BuildModel             
 
-pkl_relative_path = 'GPU_RUN/bigearthnet_df.pkl'
-DATAMODULE_PATH = "GPU_RUN/datamodule.pt"
+pkl_relative_path = 'bigearthnet_df.pkl'
+PKL_CHUNKS_DIR = "out_chunks"
+DATAMODULE_PATH = "/home/avivyuv/bigearthnet_v2/ResearchMethods/datamodule.pt"
 config_path = "configurations/models_config.yaml"
+
+def list_chunk_pkls(chunks_dir: str):
+    # helper to list all chunk .pkl files
+    return [
+        os.path.join(chunks_dir, f)
+        for f in sorted(os.listdir(chunks_dir))
+        if f.startswith("chunk_") and f.endswith(".pkl")
+    ]
 
 class SatelliteClassifier(pl.LightningModule):
     def __init__(self, model, lr=1e-4):
@@ -20,6 +29,8 @@ class SatelliteClassifier(pl.LightningModule):
         self.lr = lr
         self.criterion = nn.CrossEntropyLoss()
         self.save_hyperparameters(ignore=['model']) 
+        self.test_preds = []
+        self.test_labels = []
 
     def forward(self, x):
         return self.model(x)
@@ -81,6 +92,9 @@ def main():
     else:
         print("--- Setting up Data (Full Pipeline) ---")
         dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+        # chunk
+        # chunk_paths = list_chunk_pkls(PKL_CHUNKS_DIR)
+        # dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
         if dm is not None:
             torch.save(dm, DATAMODULE_PATH)
             print("✅ DataModule saved to disk.")
@@ -116,7 +130,7 @@ def main():
         # 2. Wrap in Lightning Module
         system = SatelliteClassifier(model=raw_model, lr=3e-4)
 
-        model_ckpt_dir = f'GPU_RUN/checkpoints/{model_name}/'
+        model_ckpt_dir = f'checkpoints/{model_name}/'
 
         # 3. Setup Checkpointing
         checkpoint_callback = ModelCheckpoint(

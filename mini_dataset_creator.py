@@ -56,16 +56,20 @@ class MiniBigEarthNetCreator:
                 dst_patch_dir.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(patch_dir, dst_patch_dir, dirs_exist_ok=True)
 
+        print(f"Created mini BigEarthNet-S2 dataset at {self.dst_root}, with {n_tiles} tiles and {m_patches_per_tile} patches per tile.")
+
 
 def main() -> None:
     # Example usage (edit paths + N/M)
     src_root = "/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2"
-    dst_root = "/home/avivyuv/bigearthnet_v2/ResearchMethods/data/BigEarthNet-S2-toy"
+    dst_root = "/home/avivyuv/bigearthnet_v2/ResearchMethods/data/BigEarthNet-S2-115-tiles-50-patches"
 
-    N = 5  # number of tiles - big geographical areas, 100km x 100km
+    N = 115  # number of tiles - big geographical areas, 100km x 100km
     M = 50  # number of patches per tile - small areas in each tile, not overlapping, each tile divided to about 8000+ patches
+    print(f"Creating mini BigEarthNet-S2 dataset with {N} tiles and {M} patches per tile...")
     creator = MiniBigEarthNetCreator(src_root, dst_root, seed=42)
     creator.create(n_tiles=N, m_patches_per_tile=M)
+    print("Done.")
 
 
 if __name__ == "__main__":

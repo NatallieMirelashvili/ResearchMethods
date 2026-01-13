@@ -5,8 +5,9 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import torchvision.transforms as T
+import os
 
-pkl_relative_path = 'GPU_RUN/bigearthnet_df.pkl'
+pkl_relative_path = 'bigearthnet_df.pkl'
 
 # --- Dataset Class ---
 class BigEarthNetDataset(Dataset):
@@ -117,39 +118,46 @@ class SatelliteDataModule(LightningDataModule):
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
+
 # Main function to run preprocessing and return DataModule
-def run_preprocessing_pipeline(pkl_path='GPU_RUN/bigearthnet_df.pkl', batch_size=32):
-    print("Loading DataFrame...")
-    try:
-        # Load the preprocessed DataFrame
-        df = pd.read_pickle(pkl_path)
-    except FileNotFoundError:
-        print(f"Error: Could not find {pkl_path}")
-        return None
+def run_preprocessing_pipeline(pkl_path=None, pkl_paths=None, batch_size=32):
+    # pkl_paths: list of chunk files (recommended)
+    # pkl_path: single file (backward compatible)
 
-    # --- NEW FILTERING LOGIC ---
-    # Filter data to keep only hours between 09:00 and 11:59
-    print("Filtering data for time range 09:00 - 12:00...")
-    
-    # Create temporary hour column
-    df['hour_temp'] = df['time_str'].apply(lambda x: int(x[:2]))
-    
-    # Keep only 9, 10, 11
-    df = df[df['hour_temp'].between(9, 11)].reset_index(drop=True)
-    
-    # Drop temporary column
-    df = df.drop(columns=['hour_temp'])
-    
-    print(f"Filtered Dataset size: {len(df)} images")
+    if pkl_paths is None:
+        # fall back to single-file behavior
+        pkl_paths = [pkl_path or 'bigearthnet_df.pkl']
 
-    if len(df) == 0:
+    print(f"Loading {len(pkl_paths)} DataFrame chunk(s)...")
+
+    dfs = []
+    for path in pkl_paths:
+        try:
+            df = pd.read_pickle(path)
+        except FileNotFoundError:
+            print(f"Error: Could not find {path}")
+            return None
+
+        # --- SAME FILTERING LOGIC ---
+        # Filter data to keep only hours between 09:00 and 11:59
+        df['hour_temp'] = df['time_str'].apply(lambda x: int(x[:2]))
+        df = df[df['hour_temp'].between(9, 11)].reset_index(drop=True)
+        df = df.drop(columns=['hour_temp'])
+
+        if len(df) > 0:
+            dfs.append(df)
+
+    if len(dfs) == 0:
         print("Error: No data found in the specified time range (09-12).")
         return None
-    
+
+    df = pd.concat(dfs, ignore_index=True)
+    print(f"Filtered Dataset size: {len(df)} images")
+
     print("Initializing DataModule...")
     data_module = SatelliteDataModule(df, batch_size=batch_size)
     data_module.setup()
-    
+
     return data_module
 
 # --- Run Preprocessing Pipeline and Inspect (Test) ---
@@ -159,7 +167,35 @@ if __name__ == "__main__":
     dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
     
     if dm is not None:
-        torch.save(dm, "GPU_RUN/datamodule.pt")
-        print("✅ DataModule saved successfully as GPU_RUN/datamodule.pt")
+        torch.save(dm, "datamodule.pt")
+        print("✅ DataModule saved successfully as datamodule.pt")
     else:
         print("❌ DataModule creation failed.")
+
+# # --- Run Preprocessing Pipeline and Inspect (Test) ---
+# if __name__ == "__main__":
+#     print("--- Running Preprocessing Pipeline ---")
+
+#     chunks_dir = "out_chunks"
+#     if os.path.isdir(chunks_dir):
+#         chunk_paths = [
+#             os.path.join(chunks_dir, f)
+#             for f in sorted(os.listdir(chunks_dir))
+#             if f.startswith("chunk_") and f.endswith(".pkl")
+#         ]
+#     else:
+#         chunk_paths = []
+
+#     # Prefer chunks if available, otherwise fall back to single pkl
+#     if len(chunk_paths) > 0:
+#         print(f"Found {len(chunk_paths)} chunk file(s) in {chunks_dir}. Using chunks.")
+#         dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
+#     else:
+#         print(f"No chunk files found. Falling back to {pkl_relative_path}.")
+#         dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+
+#     if dm is not None:
+#         torch.save(dm, "datamodule.pt")
+#         print("✅ DataModule saved successfully as datamodule.pt")
+#     else:
+#         print("❌ DataModule creation failed.")
