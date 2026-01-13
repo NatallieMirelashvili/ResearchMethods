@@ -77,27 +77,42 @@ class SatelliteDataModule(LightningDataModule):
         # Split into datasets
         indices = list(range(len(self.df)))
         
-        # Ensure stratified split based on the new 30-minute labels
-        train_idxs, test_idxs = train_test_split(
-            indices, 
-            test_size=self.test_size, 
-            stratify=labels, 
+        # # Ensure stratified split based on the new 30-minute labels
+        # train_idxs, test_idxs = train_test_split(
+        #     indices, 
+        #     test_size=self.test_size, 
+        #     stratify=labels, 
+        #     random_state=42
+        # )
+        
+        train_val_idxs, test_idxs, train_val_labels, _ = train_test_split(
+            indices, labels,
+            test_size=0.15,
+            stratify=labels,
+            random_state=42
+        )
+
+        train_idxs, val_idxs = train_test_split(
+            train_val_idxs,
+            test_size=0.176, 
+            stratify=train_val_labels,
             random_state=42
         )
 
         # Create Dataset objects
         full_dataset = BigEarthNetDataset(self.df, transform=self.transform)
         self.train_dataset = Subset(full_dataset, train_idxs)
-        self.test_dataset = Subset(full_dataset, test_idxs)
+        self.val_dataset = Subset(full_dataset, val_idxs) 
+        self.test_dataset = Subset(full_dataset, test_idxs) 
 
-        print(f"Split Summary: Train={len(self.train_dataset)}, Test={len(self.test_dataset)}")
+        print(f"Split Summary: Train={len(self.train_dataset)}, Val={len(self.val_dataset)}, Test={len(self.test_dataset)}")
 
     def train_dataloader(self):
         # Shuffle training data
         return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=0)
 
     def val_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=0)
