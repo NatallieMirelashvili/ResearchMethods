@@ -9,9 +9,18 @@ from pathlib import Path
 from preprocess import run_preprocessing_pipeline  
 from build_model import BuildModel             
 
-pkl_relative_path = 'bigearthnet_df.pkl'
+# pkl_relative_path = 'bigearthnet_df.pkl'
+PKL_CHUNKS_DIR = "out_chunks"
 DATAMODULE_PATH = "datamodule.pt"
 config_path = "configurations/models_config.yaml"
+
+def list_chunk_pkls(chunks_dir: str):
+    # helper to list all chunk .pkl files
+    return [
+        os.path.join(chunks_dir, f)
+        for f in sorted(os.listdir(chunks_dir))
+        if f.startswith("chunk_") and f.endswith(".pkl")
+    ]
 
 class SatelliteClassifier(pl.LightningModule):
     def __init__(self, model, lr=1e-4):
@@ -20,6 +29,8 @@ class SatelliteClassifier(pl.LightningModule):
         self.lr = lr
         self.criterion = nn.CrossEntropyLoss()
         self.save_hyperparameters(ignore=['model']) 
+        self.test_preds = []
+        self.test_labels = []
 
     def forward(self, x):
         return self.model(x)
@@ -80,7 +91,9 @@ def main():
         dm = torch.load(DATAMODULE_PATH, weights_only=False)
     else:
         print("--- Setting up Data (Full Pipeline) ---")
-        dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+        # dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+        chunk_paths = list_chunk_pkls(PKL_CHUNKS_DIR)
+        dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
         if dm is not None:
             torch.save(dm, DATAMODULE_PATH)
             print("✅ DataModule saved to disk.")

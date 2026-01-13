@@ -3,7 +3,8 @@ from utils.job_manager import *
 USER_NAME = "avivyuv"
 
 # path to the main script to be executed
-main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/run_pipeline.py"
+main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/preprocess.py"
+# main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/mini_dataset_creator.py"
 num_jobs = 1
 
 manager = JobManager(main_path, num_jobs)
