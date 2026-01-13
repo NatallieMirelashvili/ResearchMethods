@@ -3,7 +3,8 @@ import shutil
 import sys
 import re
 import subprocess
-from typing import List, Dict, Set
+import math
+from typing import List, Dict, Set, Optional
 
 
 # --------------------------------------------------------------------
@@ -23,7 +24,6 @@ def get_partition_nodes(partition: str) -> Set[str]:
         line = line.strip()
         if not line:
             continue
-        # sinfo -h with NodeHost usually prints a hostname in the first column
         hostname = line.split()[0]
         nodes.add(hostname)
     return nodes
@@ -35,9 +35,10 @@ def get_top_n_nodes_with_max_cpus_and_mem(
     gpu_partition: str = "gpu",
     reserve_cpus_per_node: int = 4,
     mem_fraction: float = 0.9,
+    min_mem_gb: int = 16,
 ) -> List[Dict[str, int]]:
     """
-    Returns top N *CPU-only* nodes (no GPUs) sorted by idle CPUs.
+    Returns top N *CPU-only* nodes (no GPUs) sorted by idle CPUs, filtered by min memory.
 
     Each returned dict has:
         {
@@ -46,23 +47,17 @@ def get_top_n_nodes_with_max_cpus_and_mem(
             'mem': <usable free memory in GB>
         }
 
-    Logic:
-      1) cpu_nodes = nodes in cpu_partition
-      2) gpu_nodes = nodes in gpu_partition
-      3) cpu_only_nodes = cpu_nodes - gpu_nodes   (strictly no-GPU machines)
-      4) Query cpu_partition for CPU/mem details and keep only cpu_only_nodes
+    Notes:
+      - FreeMem from sinfo is typically reported in MB.
+      - We only keep nodes with usable free memory >= min_mem_gb (after mem_fraction).
     """
-    # 1) Get node sets per partition
     cpu_nodes = get_partition_nodes(cpu_partition)
     gpu_nodes = get_partition_nodes(gpu_partition)
-
-    # 2) CPU-only nodes: in cpu partition but not in gpu partition
     cpu_only_nodes = cpu_nodes - gpu_nodes
 
     if not cpu_only_nodes:
         raise RuntimeError("No CPU-only nodes found (cpu partition minus gpu partition is empty).")
 
-    # 3) Query cpu partition for CPU/mem details
     cmd = (
         f'sinfo -r --Node --partition={cpu_partition} '
         '--exact --Format="NodeHost,CPUsState,FreeMem"'
@@ -88,26 +83,23 @@ def get_top_n_nodes_with_max_cpus_and_mem(
         info = m.groupdict()
         hostname = info["hostname"]
 
-        # Skip header and duplicates
         if hostname in seen_nodes or hostname == "HOSTNAMES":
             continue
         seen_nodes.add(hostname)
 
-        # Keep only strict CPU-only nodes (no overlap with gpu partition)
         if hostname not in cpu_only_nodes:
             continue
 
         cpus_idle = int(info["cpus_idle"])
         free_mem_mb = int(info["free_mem"])
 
-        # Safety margin: leave a few CPUs free on each node
         usable_cpus = max(cpus_idle - reserve_cpus_per_node, 0)
         if usable_cpus <= 0:
             continue
 
-        # Safety margin on memory: use only a fraction of free mem
-        mem_gb = int((free_mem_mb / 1024.0) * mem_fraction)
-        if mem_gb <= 0:
+        # Convert MB -> GB and apply safety fraction
+        mem_gb = math.floor((free_mem_mb / 1024.0) * mem_fraction)
+        if mem_gb < min_mem_gb:
             continue
 
         nodes.append({
@@ -116,7 +108,6 @@ def get_top_n_nodes_with_max_cpus_and_mem(
             "mem": mem_gb,
         })
 
-    # Sort by usable CPUs, descending
     nodes_sorted = sorted(nodes, key=lambda x: x["cpus"], reverse=True)
     return nodes_sorted[:n]
 
@@ -124,7 +115,6 @@ def get_top_n_nodes_with_max_cpus_and_mem(
 # --------------------------------------------------------------------
 # Job Manager
 # --------------------------------------------------------------------
-
 class JobManager:
     def __init__(
         self,
@@ -136,6 +126,7 @@ class JobManager:
         partition: str = "cpu",
         max_cpus_per_job: int = 64,
         total_cpu_limit: int = 2600 - 128,
+        min_mem_gb_per_job: int = 16,
     ):
         """
         main_path: path to the Python script to run.
@@ -143,6 +134,7 @@ class JobManager:
         partition: SLURM partition to use (default: 'cpu').
         max_cpus_per_job: upper bound on CPUs per job to avoid huge jobs.
         total_cpu_limit: global CPU limit across all jobs (cluster-wide cap).
+        min_mem_gb_per_job: minimum memory request per job (SBATCH --mem), in GB.
         """
         self.main_path = main_path
         self.parent_path = parent_path
@@ -150,13 +142,22 @@ class JobManager:
         self.log_data_path = log_data_path
         self.partition = partition
         self.max_cpus_per_job = max_cpus_per_job
+        self.min_mem_gb_per_job = int(min_mem_gb_per_job)
 
-        # CPU-only nodes: in cpu partition but not in gpu partition
+        # CPU-only nodes, filtered to those with >= min_mem_gb_per_job free (after fraction)
         self.free_resources = get_top_n_nodes_with_max_cpus_and_mem(
             n=num_jobs,
             cpu_partition=self.partition,
             gpu_partition="gpu",
+            min_mem_gb=self.min_mem_gb_per_job,
         )
+
+        if len(self.free_resources) < num_jobs:
+            print(
+                f"[JobManager] Warning: requested {num_jobs} jobs but only found "
+                f"{len(self.free_resources)} eligible CPU-only nodes with >= {self.min_mem_gb_per_job}GB free mem.",
+                flush=True,
+            )
 
         self.num_jobs = num_jobs
         self.job_scripts: List[str] = []
@@ -167,20 +168,34 @@ class JobManager:
 
         os.makedirs(self.log_data_path, exist_ok=True)
 
-    def create_job_script(self, job_index: int) -> str:
+    def create_job_script(self, job_index: int) -> Optional[str]:
         """
         Create a single job script file and return its path.
-        Returns None if no CPUs left to assign.
+        Returns None if no CPUs left to assign or index is out of eligible nodes.
         """
-        node_info = self.free_resources[job_index]
-        mem = int(node_info["mem"])
-        cpus_from_node = node_info["cpus"]
+        if job_index >= len(self.free_resources):
+            return None
 
-        print(f"[JobManager] Job {job_index}: node={node_info['hostname']} cpus_available={cpus_from_node} mem_available={mem}G", flush=True)
+        node_info = self.free_resources[job_index]
+        mem_available = int(node_info["mem"])
+        cpus_from_node = int(node_info["cpus"])
+
+        # Always request at least 16GB (or configured minimum)
+        mem_job = max(self.min_mem_gb_per_job, 16)
+
+        # If our estimated available mem is less than what we'd request, skip this node
+        if mem_available < mem_job:
+            return None
+
+        print(
+            f"[JobManager] Job {job_index}: node={node_info['hostname']} "
+            f"cpus_available={cpus_from_node} mem_available={mem_available}G "
+            f"mem_request={mem_job}G",
+            flush=True
+        )
 
         # Cap CPUs per job and by remaining global limit
         cpus_job = min(cpus_from_node, self.max_cpus_per_job, self.current_limit_cpu)
-
         if cpus_job <= 0:
             return None
 
@@ -192,7 +207,7 @@ class JobManager:
             script_file.write("#!/bin/bash\n")
             script_file.write(f"#SBATCH --job-name=multi_job_{job_index}\n")
             script_file.write(f"#SBATCH --cpus-per-task={cpus_job}\n")
-            script_file.write(f"#SBATCH --mem={mem}G\n")
+            script_file.write(f"#SBATCH --mem={mem_job}G\n")
             script_file.write(
                 f"#SBATCH --output={os.path.join(self.log_data_path, f'%j_job_output_{job_index}.txt')}\n"
             )
@@ -210,6 +225,10 @@ class JobManager:
             job_script_name = self.create_job_script(job_index)
             if job_script_name is not None:
                 self.job_scripts.append(job_script_name)
+
+        if not self.job_scripts:
+            print("[JobManager] No job scripts created (no eligible resources).", flush=True)
+            return
 
         self.submit_jobs()
         self.cleanup()
@@ -251,30 +270,27 @@ class JobManager:
 
     @staticmethod
     def create_or_clear_log_file(relative_log_file="../main_logs/error.txt"):
-        # Get the absolute path of the log file relative to the script's location
         script_dir = os.path.dirname(os.path.abspath(__file__))
         log_file = os.path.join(script_dir, relative_log_file)
         error_folder = os.path.join(script_dir, "../main_logs/error_folder")
-        
-        # Ensure the error folder exists
+
         os.makedirs(error_folder, exist_ok=True)
-        
-        # Check if the log file exists and is not empty
+
         if os.path.exists(log_file) and os.path.getsize(log_file) > 0:
-            # Determine the latest file number in the error folder
-            existing_files = [f for f in os.listdir(error_folder) if f.startswith("error_") and f.endswith(".txt")]
+            existing_files = [
+                f for f in os.listdir(error_folder)
+                if f.startswith("error_") and f.endswith(".txt")
+            ]
             if existing_files:
                 latest_file_num = max(int(f.split('_')[1].split('.')[0]) for f in existing_files)
             else:
                 latest_file_num = 0
+
             new_file_num = latest_file_num + 1
             new_file_name = f"error_{new_file_num}.txt"
             new_file_path = os.path.join(error_folder, new_file_name)
-            
-            # Move the log file to the error folder with the new file name
             shutil.move(log_file, new_file_path)
-        
-        # Ensure the log file is cleared by creating an empty file
+
         with open(log_file, 'w') as file:
             pass
 
@@ -282,9 +298,8 @@ class JobManager:
 # --------------------------------------------------------------------
 # Main entrypoint
 # --------------------------------------------------------------------
-
 if __name__ == "__main__":
-    main_path = ""
+    main_path = ""  # set your script path here
     log_dir = "main_logs"
     parent_path = os.getcwd()
     env_path = sys.executable
@@ -298,8 +313,9 @@ if __name__ == "__main__":
         parent_path=parent_path,
         env_path=env_path,
         log_data_path=log_data_path,
-        partition="cpu",          # use the cpu partition
-        max_cpus_per_job=64,      # cap CPUs per job
+        partition="cpu",
+        max_cpus_per_job=64,
         total_cpu_limit=2600 - 128,
+        min_mem_gb_per_job=16,  # requests at least 16GB per job
     )
     manager.create_jobs()
