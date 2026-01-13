@@ -12,3 +12,6 @@ code/__pycache__/
 
 checkpoints/
 lightning_logs/
+
+bigearthnet_df.pkl
+datamodule.pt
