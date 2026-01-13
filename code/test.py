@@ -71,10 +71,11 @@ def analyze_model(checkpoint_path, datamodule_path="GPU_RUN/datamodule.pt", buil
         for batch in test_loader:
             x, y = batch
             x = x.to(device)
+            y = y.to(device)
             logits = model(x)
             preds = torch.argmax(logits, dim=1)
             all_preds.extend(preds.cpu().numpy())
-            all_labels.extend(y.cpu().numpy())
+            all_labels.extend(y.detach().cpu().numpy())
 
     y_true = np.array(all_labels)
     y_pred = np.array(all_preds)

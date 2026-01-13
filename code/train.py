@@ -6,12 +6,12 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pathlib import Path
 
-from preprocess import run_preprocessing_pipeline  
+from preprocess import run_preprocessing_pipeline, SatelliteDataModule, BigEarthNetDataset
 from build_model import BuildModel             
 
 pkl_relative_path = 'bigearthnet_df.pkl'
 PKL_CHUNKS_DIR = "out_chunks"
-DATAMODULE_PATH = "datamodule.pt"
+DATAMODULE_PATH = "/home/avivyuv/bigearthnet_v2/ResearchMethods/datamodule.pt"
 config_path = "configurations/models_config.yaml"
 
 def list_chunk_pkls(chunks_dir: str):

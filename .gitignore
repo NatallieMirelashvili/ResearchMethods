@@ -8,3 +8,7 @@ code/__pycache__/train.cpython-313.pyc
 utils/__pycache__
 
 out_chunks
+code/__pycache__/
+
+checkpoints/
+lightning_logs/
