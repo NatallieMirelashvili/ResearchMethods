@@ -6,7 +6,8 @@ import numpy as np
 from tqdm import tqdm
 
 # Base dir of the original dataset
-BASE_DIR = r'/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2'
+# BASE_DIR = r'/dt/shabtaia/DT_Satellite/satellite_image_data/BigEarthNet-S2'
+BASE_DIR = r'/home/avivyuv/bigearthnet_v2/ResearchMethods/data/BigEarthNet-S2-115-tiles-50-patches'  # adjust as needed
 # List of band names in BigEarthNet-S2
 BAND_NAMES = ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12']
 # relative for running location in ResearchMethods/ directory, save the chunks here

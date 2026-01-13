@@ -145,42 +145,42 @@ def run_preprocessing_pipeline(pkl_path=None, pkl_paths=None, batch_size=32):
 
     return data_module
 
-# # --- Run Preprocessing Pipeline and Inspect (Test) ---
-# if __name__ == "__main__":
-#     print("--- Running Preprocessing Pipeline ---")
-#     # Returns a DataModule ready for training/testing
-#     dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
-    
-#     if dm is not None:
-#         torch.save(dm, "datamodule.pt")
-#         print("✅ DataModule saved successfully as datamodule.pt")
-#     else:
-#         print("❌ DataModule creation failed.")
-
 # --- Run Preprocessing Pipeline and Inspect (Test) ---
 if __name__ == "__main__":
     print("--- Running Preprocessing Pipeline ---")
-
-    chunks_dir = "out_chunks"
-    if os.path.isdir(chunks_dir):
-        chunk_paths = [
-            os.path.join(chunks_dir, f)
-            for f in sorted(os.listdir(chunks_dir))
-            if f.startswith("chunk_") and f.endswith(".pkl")
-        ]
-    else:
-        chunk_paths = []
-
-    # Prefer chunks if available, otherwise fall back to single pkl
-    if len(chunk_paths) > 0:
-        print(f"Found {len(chunk_paths)} chunk file(s) in {chunks_dir}. Using chunks.")
-        dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
-    else:
-        print(f"No chunk files found. Falling back to {pkl_relative_path}.")
-        dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
-
+    # Returns a DataModule ready for training/testing
+    dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+    
     if dm is not None:
         torch.save(dm, "datamodule.pt")
         print("✅ DataModule saved successfully as datamodule.pt")
     else:
         print("❌ DataModule creation failed.")
+
+# # --- Run Preprocessing Pipeline and Inspect (Test) ---
+# if __name__ == "__main__":
+#     print("--- Running Preprocessing Pipeline ---")
+
+#     chunks_dir = "out_chunks"
+#     if os.path.isdir(chunks_dir):
+#         chunk_paths = [
+#             os.path.join(chunks_dir, f)
+#             for f in sorted(os.listdir(chunks_dir))
+#             if f.startswith("chunk_") and f.endswith(".pkl")
+#         ]
+#     else:
+#         chunk_paths = []
+
+#     # Prefer chunks if available, otherwise fall back to single pkl
+#     if len(chunk_paths) > 0:
+#         print(f"Found {len(chunk_paths)} chunk file(s) in {chunks_dir}. Using chunks.")
+#         dm = run_preprocessing_pipeline(pkl_paths=chunk_paths, batch_size=32)
+#     else:
+#         print(f"No chunk files found. Falling back to {pkl_relative_path}.")
+#         dm = run_preprocessing_pipeline(pkl_path=pkl_relative_path, batch_size=32)
+
+#     if dm is not None:
+#         torch.save(dm, "datamodule.pt")
+#         print("✅ DataModule saved successfully as datamodule.pt")
+#     else:
+#         print("❌ DataModule creation failed.")
