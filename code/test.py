@@ -22,7 +22,7 @@ checkpoints = [
 DATAMODULE_FILE = "datamodule.pt"
 CONFIG_PATH = "configurations/models_config.yaml"
 
-def analyze_model(checkpoint_path, datamodule_path="GPU_RUN/datamodule.pt", builder=None):
+def analyze_model(checkpoint_path, datamodule_path="datamodule.pt", builder=None):
     """
     Loads a trained model, runs inference, calculates metrics, and saves results.
     Updated for 6 classes (30-min intervals) with a Legend.
@@ -107,7 +107,7 @@ def analyze_model(checkpoint_path, datamodule_path="GPU_RUN/datamodule.pt", buil
         "Metric": ["Accuracy", "Balanced Accuracy", "Precision (Macro)", "Recall (Macro)", "F1 Score (Macro)"],
         "Value": [acc, balanced_acc, precision, recall, f1]
     }
-    pd.DataFrame(metrics_dict).to_csv(f"GPU_RUN/metrics_{model_name}.csv", index=False)
+    pd.DataFrame(metrics_dict).to_csv(f"metrics_{model_name}.csv", index=False)
     print(f"✅ Metrics saved to CSV")
 
     # --- 7. Generate and Save Confusion Matrix with Legend ---
@@ -146,7 +146,7 @@ def analyze_model(checkpoint_path, datamodule_path="GPU_RUN/datamodule.pt", buil
 
     plt.subplots_adjust(right=0.8) 
     
-    plot_filename = f"GPU_RUN/confusion_matrix_{model_name}.png"
+    plot_filename = f"confusion_matrix_{model_name}.png"
     plt.savefig(plot_filename)
     plt.close() 
     print(f"✅ Confusion Matrix saved to '{plot_filename}'")
