@@ -5,17 +5,21 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, balanced_accuracy_score, confusion_matrix
 import os
+from preprocess import SatelliteDataModule, BigEarthNetDataset
+
+
+
 
 # Import necessary project modules
 from train import SatelliteClassifier 
 from build_model import BuildModel
 
 checkpoints = [
-    "GPU_RUN/checkpoints/vit_tiny/vit_tiny-best.ckpt",
-    "GPU_RUN/checkpoints/resnet50/resnet50-best.ckpt",
-    "GPU_RUN/checkpoints/efficientnet_b0/efficientnet_b0-best.ckpt"
+    "checkpoints/vit_tiny/vit_tiny-best.ckpt",
+    "checkpoints/resnet50/resnet50-best.ckpt",
+    "checkpoints/efficientnet_b0/efficientnet_b0-best.ckpt"
 ]
-DATAMODULE_FILE = "GPU_RUN/datamodule.pt"
+DATAMODULE_FILE = "datamodule.pt"
 CONFIG_PATH = "configurations/models_config.yaml"
 
 def analyze_model(checkpoint_path, datamodule_path="GPU_RUN/datamodule.pt", builder=None):
