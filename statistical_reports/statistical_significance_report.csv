@@ -1,0 +1,4 @@
+Comparison,Corrected_P_Value,Significant
+vit_tiny vs efficientnet_b0,5.7220458984375e-06,True
+vit_tiny vs resnet50,5.7220458984375e-06,True
+efficientnet_b0 vs resnet50,5.7220458984375e-06,True

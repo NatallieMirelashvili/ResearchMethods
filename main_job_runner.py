@@ -5,7 +5,7 @@ USER_NAME = "segaldol"
 
 
 # path to the main script to be executed
-main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/test.py"
+main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/visualize_results.py"
 # main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/mini_dataset_creator.py"
 num_jobs = 1
 
