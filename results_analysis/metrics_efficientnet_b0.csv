@@ -1,0 +1,2 @@
+Model,Accuracy,Balanced_Acc,Macro_F1
+efficientnet_b0,0.8215527230590962,0.8216712316092577,0.7965313518812907

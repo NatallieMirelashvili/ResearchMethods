@@ -10,3 +10,4 @@ pytorch_lightning
 pandas
 scikit-learn
 seaborn
+statsmodels

@@ -1,7 +1,7 @@
 from utils.job_manager import *
 
-USER_NAME = "avivyuv"
-# USER_NAME = "segaldol"
+# USER_NAME = "avivyuv"
+USER_NAME = "segaldol"
 
 
 # path to the main script to be executed
