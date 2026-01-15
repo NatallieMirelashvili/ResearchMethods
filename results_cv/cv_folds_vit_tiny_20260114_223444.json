@@ -1,0 +1,62 @@
+[
+  {
+    "run_tag": "20260114_223444",
+    "fold": 1,
+    "model_name": "vit_tiny",
+    "built_model_type": "VisionTransformer",
+    "n_params": 5967942,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_1/vit_tiny-best-v1.ckpt",
+    "best_val_bal_acc_ckpt_score": 0.6539766192436218,
+    "val_as_test_acc": 0.6539766192436218,
+    "val_as_test_bal_acc": 0.6539766192436218,
+    "val_as_test_f1_macro": 0.6305322647094727
+  },
+  {
+    "run_tag": "20260114_223444",
+    "fold": 2,
+    "model_name": "vit_tiny",
+    "built_model_type": "VisionTransformer",
+    "n_params": 5967942,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_2/vit_tiny-best.ckpt",
+    "best_val_bal_acc_ckpt_score": 0.6610897779464722,
+    "val_as_test_acc": 0.6610897779464722,
+    "val_as_test_bal_acc": 0.6610897779464722,
+    "val_as_test_f1_macro": 0.6540033221244812
+  },
+  {
+    "run_tag": "20260114_223444",
+    "fold": 3,
+    "model_name": "vit_tiny",
+    "built_model_type": "VisionTransformer",
+    "n_params": 5967942,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_3/vit_tiny-best.ckpt",
+    "best_val_bal_acc_ckpt_score": 0.5866113305091858,
+    "val_as_test_acc": 0.5866113305091858,
+    "val_as_test_bal_acc": 0.5866113305091858,
+    "val_as_test_f1_macro": 0.6395836472511292
+  },
+  {
+    "run_tag": "20260114_223444",
+    "fold": 4,
+    "model_name": "vit_tiny",
+    "built_model_type": "VisionTransformer",
+    "n_params": 5967942,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_4/vit_tiny-best.ckpt",
+    "best_val_bal_acc_ckpt_score": 0.5607134699821472,
+    "val_as_test_acc": 0.5607134699821472,
+    "val_as_test_bal_acc": 0.5607134699821472,
+    "val_as_test_f1_macro": 0.6082473397254944
+  },
+  {
+    "run_tag": "20260114_223444",
+    "fold": 5,
+    "model_name": "vit_tiny",
+    "built_model_type": "VisionTransformer",
+    "n_params": 5967942,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_5/vit_tiny-best.ckpt",
+    "best_val_bal_acc_ckpt_score": 0.6153373122215271,
+    "val_as_test_acc": 0.6153373122215271,
+    "val_as_test_bal_acc": 0.6153373122215271,
+    "val_as_test_f1_macro": 0.6506141424179077
+  }
+]

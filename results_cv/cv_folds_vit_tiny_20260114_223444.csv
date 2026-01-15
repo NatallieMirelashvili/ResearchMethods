@@ -1,0 +1,6 @@
+run_tag,fold,model_name,built_model_type,n_params,best_model_path,best_val_bal_acc_ckpt_score,val_as_test_acc,val_as_test_bal_acc,val_as_test_f1_macro
+20260114_223444,1,vit_tiny,VisionTransformer,5967942,/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_1/vit_tiny-best-v1.ckpt,0.6539766192436218,0.6539766192436218,0.6539766192436218,0.6305322647094727
+20260114_223444,2,vit_tiny,VisionTransformer,5967942,/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_2/vit_tiny-best.ckpt,0.6610897779464722,0.6610897779464722,0.6610897779464722,0.6540033221244812
+20260114_223444,3,vit_tiny,VisionTransformer,5967942,/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_3/vit_tiny-best.ckpt,0.5866113305091858,0.5866113305091858,0.5866113305091858,0.6395836472511292
+20260114_223444,4,vit_tiny,VisionTransformer,5967942,/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_4/vit_tiny-best.ckpt,0.5607134699821472,0.5607134699821472,0.5607134699821472,0.6082473397254944
+20260114_223444,5,vit_tiny,VisionTransformer,5967942,/home/avivyuv/bigearthnet_v2/ResearchMethods/results_cv/checkpoints/vit_tiny/fold_5/vit_tiny-best.ckpt,0.6153373122215271,0.6153373122215271,0.6153373122215271,0.6506141424179077

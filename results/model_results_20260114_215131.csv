@@ -1,0 +1,4 @@
+run_tag,model_name,built_model_type,n_params,best_val_bal_acc,test_acc,test_bal_acc,test_f1_macro,best_model_path
+20260114_215131,efficientnet_b0,EfficientNet,4017826,0.7631888389587402,0.7816392779350281,0.7816392779350281,0.7720750570297241,/home/avivyuv/bigearthnet_v2/ResearchMethods/checkpoints/efficientnet_b0/efficientnet_b0-best.ckpt
+20260114_215131,resnet50,ResNet,23548550,0.6915245652198792,0.7258145809173584,0.7258145809173584,0.7351414561271667,/home/avivyuv/bigearthnet_v2/ResearchMethods/checkpoints/resnet50/resnet50-best.ckpt
+20260114_215131,vit_tiny,VisionTransformer,5967942,0.6029733419418335,0.5806713104248047,0.5806713104248047,0.5687244534492493,/home/avivyuv/bigearthnet_v2/ResearchMethods/checkpoints/vit_tiny/vit_tiny-best.ckpt

@@ -11,6 +11,7 @@ out_chunks
 code/__pycache__/
 
 checkpoints/
+checkpoints_Backup/
 lightning_logs/
 
 bigearthnet_df.pkl

@@ -1,0 +1,35 @@
+[
+  {
+    "run_tag": "20260114_215131",
+    "model_name": "resnet50",
+    "built_model_type": "ResNet",
+    "n_params": 23548550,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/checkpoints/resnet50/resnet50-best.ckpt",
+    "best_val_bal_acc": 0.6915245652198792,
+    "test_acc": 0.7258145809173584,
+    "test_bal_acc": 0.7258145809173584,
+    "test_f1_macro": 0.7351414561271667
+  },
+  {
+    "run_tag": "20260114_215131",
+    "model_name": "efficientnet_b0",
+    "built_model_type": "EfficientNet",
+    "n_params": 4017826,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/checkpoints/efficientnet_b0/efficientnet_b0-best.ckpt",
+    "best_val_bal_acc": 0.7631888389587402,
+    "test_acc": 0.7816392779350281,
+    "test_bal_acc": 0.7816392779350281,
+    "test_f1_macro": 0.7720750570297241
+  },
+  {
+    "run_tag": "20260114_215131",
+    "model_name": "vit_tiny",
+    "built_model_type": "VisionTransformer",
+    "n_params": 5967942,
+    "best_model_path": "/home/avivyuv/bigearthnet_v2/ResearchMethods/checkpoints/vit_tiny/vit_tiny-best.ckpt",
+    "best_val_bal_acc": 0.6029733419418335,
+    "test_acc": 0.5806713104248047,
+    "test_bal_acc": 0.5806713104248047,
+    "test_f1_macro": 0.5687244534492493
+  }
+]

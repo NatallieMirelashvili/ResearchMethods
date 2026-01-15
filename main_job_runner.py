@@ -5,7 +5,7 @@ USER_NAME = "avivyuv"
 
 
 # path to the main script to be executed
-main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/train.py"
+main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/code/cv_script.py"
 # main_path = f"/home/{USER_NAME}/bigearthnet_v2/ResearchMethods/mini_dataset_creator.py"
 num_jobs = 1
 

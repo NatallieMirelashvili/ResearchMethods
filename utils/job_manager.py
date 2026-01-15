@@ -181,11 +181,7 @@ class JobManager:
         cpus_from_node = int(node_info["cpus"])
 
         # Always request at least 16GB (or configured minimum)
-        mem_job = max(self.min_mem_gb_per_job, 16)
-
-        # If our estimated available mem is less than what we'd request, skip this node
-        if mem_available < mem_job:
-            return None
+        mem_job = max(self.min_mem_gb_per_job, mem_available)
 
         print(
             f"[JobManager] Job {job_index}: node={node_info['hostname']} "
